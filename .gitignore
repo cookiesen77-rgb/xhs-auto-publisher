@@ -1,0 +1,53 @@
+# 环境变量（包含敏感信息）
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# 虚拟环境
+venv/
+ENV/
+env/
+.venv/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# 生成的文件（可选择是否忽略）
+# output/*.json
+# images/*.jpg
+# images/*.png
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Playwright
+.xhs_browser_data/
+
+# 日志
+*.log
