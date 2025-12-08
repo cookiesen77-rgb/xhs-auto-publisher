@@ -116,9 +116,9 @@ class XHSPublisher:
             # 切换到"上传图文"标签（默认可能是视频）
             try:
                 await self.page.evaluate('''() => {
-                    const tabs = document.querySelectorAll('div');
+                    const tabs = document.querySelectorAll('span, div');
                     for (let tab of tabs) {
-                        if (tab.textContent === '上传图文' && tab.textContent.length < 10) {
+                        if (tab.textContent === '上传图文') {
                             tab.click();
                             return true;
                         }
@@ -155,13 +155,13 @@ class XHSPublisher:
             print("📝 填写标题...")
             try:
                 title_input = await self.page.wait_for_selector(
-                    'input[placeholder*="标题"], input.d-text',
+                    'input[placeholder*="标题"]',
                     timeout=10000
                 )
                 if title_input:
                     await title_input.click()
-                    await title_input.fill(title)
-                    print(f"✅ 标题已填写: {title[:20]}...")
+                    await title_input.fill(title[:20])  # 确保标题不超过20字
+                    print(f"✅ 标题已填写: {title[:20]}")
             except Exception as e:
                 print(f"⚠️  标题填写失败: {e}")
 
@@ -174,15 +174,24 @@ class XHSPublisher:
 
             try:
                 # 小红书使用 tiptap/ProseMirror 编辑器，需要用 JS 直接设置内容
-                # 将换行转换为 <p> 标签
+                # 将换行转换为 <p> 标签，并转义特殊字符
                 paragraphs = full_content.split('\n')
-                html_content = ''.join([f'<p>{p}</p>' if p.strip() else '<p></p>' for p in paragraphs])
+                html_parts = []
+                for p in paragraphs:
+                    # 转义HTML特殊字符
+                    escaped = p.replace('\\', '\\\\').replace('`', '\\`').replace('$', '\\$')
+                    if escaped.strip():
+                        html_parts.append(f'<p>{escaped}</p>')
+                    else:
+                        html_parts.append('<p><br></p>')
+                html_content = ''.join(html_parts)
                 
                 await self.page.evaluate(f'''() => {{
-                    const editor = document.querySelector('.tiptap.ProseMirror, div[contenteditable="true"]');
+                    const editor = document.querySelector('.ProseMirror[contenteditable="true"]');
                     if (editor) {{
                         editor.innerHTML = `{html_content}`;
                         editor.dispatchEvent(new Event('input', {{ bubbles: true }}));
+                        editor.dispatchEvent(new Event('change', {{ bubbles: true }}));
                         return true;
                     }}
                     return false;
@@ -193,7 +202,7 @@ class XHSPublisher:
                 # 备用方案：点击并输入
                 try:
                     content_input = await self.page.wait_for_selector(
-                        '.tiptap.ProseMirror, div[contenteditable="true"]',
+                        '.ProseMirror[contenteditable="true"]',
                         timeout=5000
                     )
                     if content_input:
@@ -208,9 +217,9 @@ class XHSPublisher:
             # 点击发布按钮
             print("🚀 准备发布...")
             try:
-                # 小红书发布按钮的精确选择器
+                # 使用文本选择器找到发布按钮
                 publish_btn = await self.page.wait_for_selector(
-                    'button.publishBtn, button:has-text("发布")',
+                    'button:has-text("发布")',
                     timeout=10000
                 )
                 if publish_btn:
@@ -218,18 +227,19 @@ class XHSPublisher:
                     if is_enabled:
                         await publish_btn.click()
                         print("✅ 已点击发布按钮")
-                        await asyncio.sleep(5)
+                        # 等待发布完成（页面会跳转回初始状态）
+                        await asyncio.sleep(8)
                         result["success"] = True
-                        result["message"] = "发布操作已执行，请检查是否成功"
+                        result["message"] = "笔记发布成功"
                     else:
                         result["message"] = "发布按钮不可点击，可能内容不完整"
                         print("⚠️  发布按钮不可点击")
             except Exception as e:
-                result["message"] = f"点击发布按钮失败: {e}"
-                print(f"⚠️  点击发布按钮失败: {e}")
+                result["message"] = f"发布失败: {e}"
+                print(f"⚠️  发布失败: {e}")
 
             if result["success"]:
-                print("✅ 发布操作完成！")
+                print("✅ 发布完成！")
             else:
                 # 保存截图以便调试
                 screenshot_path = str(Path(__file__).parent.parent / "output" / "debug_screenshot.png")

@@ -17,14 +17,16 @@ class ContentGenerator:
 主题：{topic}
 
 请生成：
-1. 吸引人的标题（带emoji，20字以内）
+1. 吸引人的标题（带emoji，必须控制在20字以内，包括emoji）
 2. 正文内容（200-500字，分段，带emoji）
 3. 5-10个相关话题标签
 4. 3-5个建议的图片关键词
 
+重要：标题必须严格控制在20字以内！
+
 返回JSON格式：
 {{
-    "title": "标题",
+    "title": "标题（不超过20字）",
     "content": "正文",
     "tags": ["标签1", "标签2"],
     "image_keywords": ["关键词1", "关键词2"]
@@ -68,6 +70,10 @@ class ContentGenerator:
 
         result['created_at'] = datetime.now().isoformat()
         result['original_topic'] = topic
+
+        # 确保标题不超过20字
+        if len(result.get('title', '')) > 20:
+            result['title'] = result['title'][:20]
 
         return result
 

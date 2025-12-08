@@ -15,6 +15,7 @@ sys.path.insert(0, str(Path(__file__).parent / 'modules'))
 from content_generator import ContentGenerator
 from image_fetcher import ImageFetcher
 from xhs_playwright import XHSPublisher
+import glob
 
 
 def main():
@@ -75,6 +76,9 @@ def main():
         # 自动发布
         print("\n🚀 启动自动发布...")
         asyncio.run(auto_publish(content, images))
+        
+        # 清理本地生成的文件
+        cleanup_local_files(str(draft_path), images)
     else:
         # 仅生成内容
         print(f"\n📁 草稿文件已保存: {draft_path}")
@@ -85,6 +89,30 @@ def main():
     print(f"\n" + "=" * 60)
     print("✨ 工作流完成!")
     print("=" * 60)
+
+
+def cleanup_local_files(draft_path: str, images: list):
+    """清理本地生成的文件"""
+    print("\n🧹 清理本地文件...")
+    
+    # 删除草稿文件
+    try:
+        if os.path.exists(draft_path):
+            os.remove(draft_path)
+            print(f"  已删除草稿: {draft_path}")
+    except Exception as e:
+        print(f"  ⚠️ 删除草稿失败: {e}")
+    
+    # 删除图片文件
+    for img_path in images:
+        try:
+            if os.path.exists(img_path):
+                os.remove(img_path)
+                print(f"  已删除图片: {img_path}")
+        except Exception as e:
+            print(f"  ⚠️ 删除图片失败: {e}")
+    
+    print("✅ 本地文件清理完成")
 
 
 async def auto_publish(content: dict, images: list):

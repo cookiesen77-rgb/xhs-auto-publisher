@@ -21,6 +21,12 @@ if [ -z "$SILICONFLOW_API_KEY" ]; then
     exit 1
 fi
 
+# 激活虚拟环境
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+if [ -d "$SCRIPT_DIR/venv" ]; then
+    source "$SCRIPT_DIR/venv/bin/activate"
+fi
+
 echo "选择操作:"
 echo "1. 完整工作流（生成+发布）"
 echo "2. 仅生成文案"
@@ -32,20 +38,20 @@ read -p "请选择 (1-4): " choice
 case $choice in
     1)
         echo "启动完整工作流..."
-        python workflow.py
+        python3 workflow.py
         ;;
     2)
         echo "启动文案生成..."
-        cd modules && python content_generator.py
+        cd modules && python3 content_generator.py
         ;;
     3)
         echo "启动图片下载..."
-        cd modules && python image_fetcher.py
+        cd modules && python3 image_fetcher.py
         ;;
     4)
         read -p "请输入草稿文件路径: " draft
         echo "启动Playwright发布..."
-        cd modules && python xhs_playwright.py "$draft" ../images/
+        cd modules && python3 xhs_playwright.py "$draft" ../images/
         ;;
     *)
         echo "无效选择"
